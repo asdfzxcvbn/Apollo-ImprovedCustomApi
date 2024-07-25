@@ -406,25 +406,26 @@ static void TryResolveShareUrl(NSString *urlString, void (^successHandler)(NSStr
 }
 
 // Imgur Delete and album creation
-- (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request completionHandler:(void (^)(NSData*, NSURLResponse*, NSError*))completionHandler {
+- (NSURLSessionDataTask*)dataTaskWithRequest:(NSMutableURLRequest*)request completionHandler:(void (^)(NSData*, NSURLResponse*, NSError*))completionHandler {
     NSString *urlString = [[request URL] absoluteString];
     NSString *oldImagePrefix = @"https://imgur-apiv3.p.rapidapi.com/3/image/";
     NSString *newImagePrefix = @"https://api.imgur.com/3/image/";
     NSString *oldAlbumPrefix = @"https://imgur-apiv3.p.rapidapi.com/3/album";
     NSString *newAlbumPrefix = @"https://api.imgur.com/3/album";
 
+    [request
+        setValue:@"iOS: com.foo.TotallyReddit v1.15.11"
+        forHTTPHeaderField:@"User-Agent"];
+
     if ([urlString hasPrefix:oldImagePrefix]) {
         NSString *suffix = [urlString substringFromIndex:oldImagePrefix.length];
         NSString *newUrlString = [newImagePrefix stringByAppendingString:suffix];
-        NSMutableURLRequest *modifiedRequest = [request mutableCopy];
-        [modifiedRequest setURL:[NSURL URLWithString:newUrlString]];
-        return %orig(modifiedRequest,completionHandler);
+        [request setURL:[NSURL URLWithString:newUrlString]];
     } else if ([urlString isEqualToString:oldAlbumPrefix]) {
-        NSMutableURLRequest *modifiedRequest = [request mutableCopy];
-        [modifiedRequest setURL:[NSURL URLWithString:newAlbumPrefix]];
-        return %orig(modifiedRequest,completionHandler);
+        [request setURL:[NSURL URLWithString:newAlbumPrefix]];
     }
-    return %orig();
+
+    return %orig;
 }
 
 // "Unproxy" Imgur requests
